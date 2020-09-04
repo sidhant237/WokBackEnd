@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request
 from flask_mysqldb import MySQL
 import json
+from flask_cors import CORS
+
 
 app = Flask(__name__)
 
@@ -10,6 +12,11 @@ app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = "wokdb"
 
 mysql = MySQL(app)
+
+CORS_HEADERS = 'Content-Type'
+cors = CORS(app)
+
+
 
 @app.route('/closingstock',methods=['GET','POST'])
 
