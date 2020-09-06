@@ -61,6 +61,8 @@ def closingstock():
     for row in rv:
         json_data2.append(dict(zip(columnheaders,row)))
 
+    
+
     json_return = {}
     json_return['Items'] = json_data
     json_return['Outlets'] = json_data1 
@@ -283,13 +285,13 @@ def transferstock():
 def order():
     cur = mysql.connection.cursor()
 
-    val = "MItem.Mitem_ID, MItem.MitemName, MItemCat.MItemCatID, MItemCat.MCatName"
+    val = "MItem.Mitem_ID, MItem.MitemName,MItem.Price, MItemCat.MItemCatID, MItemCat.MCatName"
     tab = "MItem,MitemCat"
     joi = "MItem.MItemCatID=MItemCat.MItemCatID"
     cur.execute(f'''Select {val} from {tab} where {joi} ''')
     rv = cur.fetchall()
     json_data = []
-    headers = ['itemid','itemname','catid','catname']
+    headers = ['itemid','itemname','price','catid','catname']
     for row in rv:
         json_data.append(dict(zip(headers,row)))
     
