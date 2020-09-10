@@ -93,10 +93,10 @@ def closingstock():
                 cur.execute(query)
                 mysql.connection.commit()   
                 print(query)
-            
+            return ({'message': 'success'}), 200
         
     return json.dumps(json_return)
-    return ({'message': 'success'}), 200
+    
 
 @app.route('/billentry',methods=['GET','POST'])
 
@@ -194,6 +194,7 @@ def billentry():
                 cur.execute(query)
                 mysql.connection.commit()   
                 print(query)
+            return ({'message': 'success'}), 200
 
         if outlet == '2':
         
@@ -202,6 +203,7 @@ def billentry():
                 cur.execute(query)
                 mysql.connection.commit()   
                 print(query)
+            return ({'message': 'success'}), 200
 
         if payterms == '1':
             query = f'''INSERT INTO Payments (Date,Supplier_ID,Amount,Paymethod_ID) VALUES ("2020-08-01",'{supplier}','{total}','{payterms}')'''
@@ -211,7 +213,7 @@ def billentry():
             print(query)
         
     return json.dumps(json_return)
-    return ({'message': 'success'}), 200
+    
 
 
 @app.route('/transfer',methods=['GET','POST'])
@@ -277,12 +279,13 @@ def transferstock():
             cur.execute(query)
             mysql.connection.commit()   
             print(query)
+        return ({'message': 'success'}), 200
         
     return json.dumps(json_return)
-    return ({'message': 'success'}), 200
+    
 
-@app.route('/order',methods=['GET','POST'])
-def order():
+@app.route('/hazraorder',methods=['GET','POST'])
+def hazraorder():
     cur = mysql.connection.cursor()
 
     val = "MItem.Mitem_ID, MItem.MitemName,MItem.Price, MItemCat.MItemCatID, MItemCat.MCatName"
@@ -311,13 +314,93 @@ def order():
     json_data2 = []
     for row in rv:
         json_data2.append(dict(zip(headers,row)))
+
+    #Bill No##############
+    cur = mysql.connection.cursor()
+    cur.execute(f'''Select OrderHazra.OrderNo from OrderHazra  ''')
+    rv = cur.fetchall()
+    a = []
+    for num in rv:
+        a.append(num[0])
+    b = []
+    for num in a:
+        b.append(int(num[1:]))
+    c = str(max(b) + 1)
+    d = ['H' + c]
+    
+    header = ['1']
+    json_data3 = []
+    json_data3.append(dict(zip(header,d)))    
     
     jsonreturn = {}
     jsonreturn['menu'] = json_data
     jsonreturn['discount'] = json_data1
     jsonreturn['outlet'] = json_data2
+    jsonreturn['OrderNo'] = json_data3
 
     return json.dumps(jsonreturn)
+
+
+#########ORDERTOLLY#########
+
+@app.route('/tollyorder',methods=['GET','POST'])
+def tollyorder():
+    cur = mysql.connection.cursor()
+
+    val = "MItem.Mitem_ID, MItem.MitemName,MItem.Price, MItemCat.MItemCatID, MItemCat.MCatName"
+    tab = "MItem,MitemCat"
+    joi = "MItem.MItemCatID=MItemCat.MItemCatID"
+    cur.execute(f'''Select {val} from {tab} where {joi} ''')
+    rv = cur.fetchall()
+    json_data = []
+    headers = ['itemid','itemname','price','catid','catname']
+    for row in rv:
+        json_data.append(dict(zip(headers,row)))
+    
+
+    #val = "Discount.DiscountID,Discount.DiscountName"
+    #tab = 'Discount'
+    cur.execute('''select * from discount''')
+    rv = cur.fetchall()
+    headers = ['discountid','discountname']
+    json_data1 = []
+    for row in rv:
+        json_data1.append(dict(zip(headers,row)))
+
+    cur.execute('''select * from outlet''')
+    rv = cur.fetchall()
+    headers = ["outletid","outletname"]
+    json_data2 = []
+    for row in rv:
+        json_data2.append(dict(zip(headers,row)))
+
+    #Bill No##############
+    cur = mysql.connection.cursor()
+    cur.execute(f'''Select OrderTolly.OrderNo from OrderTolly  ''')
+    rv = cur.fetchall()
+    a = []
+    for num in rv:
+        a.append(num[0])
+    b = []
+    for num in a:
+        b.append(int(num[1:]))
+    c = str(max(b) + 1)
+    d = ['H' + c]
+    
+    header = ['1']
+    json_data3 = []
+    json_data3.append(dict(zip(header,d)))    
+    
+    jsonreturn = {}
+    jsonreturn['menu'] = json_data
+    jsonreturn['discount'] = json_data1
+    jsonreturn['outlet'] = json_data2
+    jsonreturn['OrderNo'] = json_data3
+
+    return json.dumps(jsonreturn)
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
