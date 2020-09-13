@@ -186,31 +186,40 @@ def billentry():
         value = []
         for item in items:
             value.append(list(item.values()))
-            
-        if outlet == '1':
         
+        if outlet == '1':
             for row in value:
                 query = f'''INSERT INTO PurchaseTolly (Pitem_ID,Qnty,Amount,EMPID,Date,Supplier_ID,PayTerms_ID,Bill_No) VALUES ({int(row[0])},{int(row[1])},{int(row[2])},'{str(row[3])}','{str(row[4])}','{str(row[5])}','{str(row[6])}','{str(row[7])}' )'''
                 cur.execute(query)
                 mysql.connection.commit()   
                 print(query)
+
+            if payterms == '1':
+            
+                query = f'''INSERT INTO Payments (Date,Supplier_ID,Amount,Paymethod_ID) VALUES ("2020-08-01",'{supplier}','{total}','{payterms}')'''
+                #query = f'''INSERT INTO Payments (Date,Supplier_ID,Amount,Paymethod_ID) VALUES ('1','2','3','4')'''
+                cur.execute(query)
+                mysql.connection.commit() 
+                print(query)
+            
             return ({'message': 'success'}), 200
 
-        if outlet == '2':
+        elif outlet == '2':
         
             for row in value:
                 query = f'''INSERT INTO PurchaseHazra (Pitem_ID,Qnty,Amount,EMPID,Date,Supplier_ID,PayTerms_ID,Bill_No) VALUES ({int(row[0])},{int(row[1])},{int(row[2])},'{str(row[3])}','{str(row[4])}','{str(row[5])}','{str(row[6])}','{str(row[7])}' )'''
                 cur.execute(query)
                 mysql.connection.commit()   
                 print(query)
-            return ({'message': 'success'}), 200
 
-        if payterms == '1':
-            query = f'''INSERT INTO Payments (Date,Supplier_ID,Amount,Paymethod_ID) VALUES ("2020-08-01",'{supplier}','{total}','{payterms}')'''
-            #query = f'''INSERT INTO Payments (Date,Supplier_ID,Amount,Paymethod_ID) VALUES ('1','2','3','4')'''
-            cur.execute(query)
-            mysql.connection.commit() 
-            print(query)
+            if payterms == '1':
+                query = f'''INSERT INTO Payments (Date,Supplier_ID,Amount,Paymethod_ID) VALUES ("2020-08-01",'{supplier}','{total}','{payterms}')'''
+                #query = f'''INSERT INTO Payments (Date,Supplier_ID,Amount,Paymethod_ID) VALUES ('1','2','3','4')'''
+                cur.execute(query)
+                mysql.connection.commit() 
+                print(query)
+            
+            return ({'message': 'success'}), 200
         
     return json.dumps(json_return)
     
@@ -274,11 +283,32 @@ def transferstock():
         for item in items:
             value.append(list(item.values()))
 
-        for row in value:
-            query = f'''INSERT INTO TransferTolly (Date,Pitem_ID,Qnty,EMPID) VALUES ('{str(row[3])}',{int(row[0])},{int(row[1])},'{str(row[2])}')'''
-            cur.execute(query)
-            mysql.connection.commit()   
-            print(query)
+        if fromoutlet == '1':
+            for row in value:
+                query = f'''INSERT INTO TransferTolly (Date,Pitem_ID,Qnty,EMPID) VALUES ('{str(row[3])}',{int(row[0])},{int(-abs(row[1]))},'{str(row[2])}')'''
+                cur.execute(query)
+                mysql.connection.commit()   
+                print(query)
+
+            for row in value:
+                query = f'''INSERT INTO TransferHazra (Date,Pitem_ID,Qnty,EMPID) VALUES ('{str(row[3])}',{int(row[0])},{int(row[1])},'{str(row[2])}')'''
+                cur.execute(query)
+                mysql.connection.commit()   
+                print(query)
+
+        elif fromoutlet == '2':
+            for row in value:
+                query = f'''INSERT INTO TransferHazra (Date,Pitem_ID,Qnty,EMPID) VALUES ('{str(row[3])}',{int(row[0])},{int(-abs(row[1]))},'{str(row[2])}')'''
+                cur.execute(query)
+                mysql.connection.commit()   
+                print(query)
+
+            for row in value:
+                query = f'''INSERT INTO TransferTolly (Date,Pitem_ID,Qnty,EMPID) VALUES ('{str(row[3])}',{int(row[0])},{int(row[1])},'{str(row[2])}')'''
+                cur.execute(query)
+                mysql.connection.commit()   
+                print(query)
+            
         return ({'message': 'success'}), 200
         
     return json.dumps(json_return)
@@ -327,10 +357,26 @@ def hazraorder():
         b.append(int(num[1:]))
     c = str(max(b) + 1)
     d = ['H' + c]
+
     
     header = ['1']
     json_data3 = []
     json_data3.append(dict(zip(header,d)))    
+
+
+    ###insert
+    if request.method == "POST":
+        json_data = request.get_json()
+        items = json_data['items']
+        value = []
+        for item in items:
+            value.append(list(item.values()))
+        for row in value:
+            query = f'''INSERT INTO OrderHazra (Date,OrderNo,Mitem_ID,Qnty,Amt) VALUES ('{str(row[3])}','{str(row[4])}',{int(row[0])},{int(row[1])},{float(row[2])})'''
+            cur.execute(query)
+            mysql.connection.commit()   
+        print(value)
+        return ({'message': 'success'}), 200
     
     jsonreturn = {}
     jsonreturn['menu'] = json_data
@@ -374,7 +420,7 @@ def tollyorder():
     for row in rv:
         json_data2.append(dict(zip(headers,row)))
 
-    #Bill No##############
+    #Order No##############
     cur = mysql.connection.cursor()
     cur.execute(f'''Select OrderTolly.OrderNo from OrderTolly  ''')
     rv = cur.fetchall()
@@ -385,17 +431,32 @@ def tollyorder():
     for num in a:
         b.append(int(num[1:]))
     c = str(max(b) + 1)
-    d = ['H' + c]
+    d = ['T' + c]
     
     header = ['1']
     json_data3 = []
     json_data3.append(dict(zip(header,d)))    
+
+    #####Discounts
     
     jsonreturn = {}
     jsonreturn['menu'] = json_data
     jsonreturn['discount'] = json_data1
     jsonreturn['outlet'] = json_data2
     jsonreturn['OrderNo'] = json_data3
+
+    if request.method == "POST":
+        json_data = request.get_json()
+        items = json_data['items']
+        value = []
+        for item in items:
+            value.append(list(item.values()))
+        for row in value:
+            query = f'''INSERT INTO OrderTolly (Date,OrderNo,Mitem_ID,Qnty,Amt) VALUES ('{str(row[3])}','{str(row[4])}',{int(row[0])},{int(row[1])},{float(row[2])})'''
+            cur.execute(query)
+            mysql.connection.commit()   
+        print(value)
+        return ({'message': 'success'}), 200
 
     return json.dumps(jsonreturn)
 
