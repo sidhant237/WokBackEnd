@@ -358,11 +358,26 @@ def hazraorder():
     c = str(max(b) + 1)
     d = ['H' + c]
 
-    
     header = ['1']
     json_data3 = []
     json_data3.append(dict(zip(header,d)))    
 
+    ###Order Method ###
+
+    cur.execute(f'''Select * from OrderMethod  ''')
+    rv = cur.fetchall()
+    json_data4 = []
+    header = ['OrderMethodID','OrderMethodName']
+    for row in rv:
+        json_data4.append(dict(zip(header,row)))
+
+    ###PaymentMethod#####
+    cur.execute(f'''Select * from PayMethod  ''')
+    rv = cur.fetchall()
+    json_data5 = []
+    header = ['PayMethodID','PayMethodName']
+    for row in rv:
+        json_data5.append(dict(zip(header,row)))
 
     ###insert
     if request.method == "POST":
@@ -383,6 +398,8 @@ def hazraorder():
     jsonreturn['discount'] = json_data1
     jsonreturn['outlet'] = json_data2
     jsonreturn['OrderNo'] = json_data3
+    jsonreturn['OrderMethod']= json_data4
+    jsonreturn['PayMethod']= json_data5
 
     return json.dumps(jsonreturn)
 
@@ -437,13 +454,32 @@ def tollyorder():
     json_data3 = []
     json_data3.append(dict(zip(header,d)))    
 
-    #####Discounts
+    
+
+    ###Order Method ###
+
+    cur.execute(f'''Select * from OrderMethod  ''')
+    rv = cur.fetchall()
+    json_data4 = []
+    header = ['OrderMethodID','OrderMethodName']
+    for row in rv:
+        json_data4.append(dict(zip(header,row)))
+
+    ###PaymentMethod#####
+    cur.execute(f'''Select * from PayMethod  ''')
+    rv = cur.fetchall()
+    json_data5 = []
+    header = ['PayMethodID','PayMethodName']
+    for row in rv:
+        json_data5.append(dict(zip(header,row)))
     
     jsonreturn = {}
     jsonreturn['menu'] = json_data
     jsonreturn['discount'] = json_data1
     jsonreturn['outlet'] = json_data2
     jsonreturn['OrderNo'] = json_data3
+    jsonreturn['OrderMethod']= json_data4
+    jsonreturn['PayMethod']= json_data5
 
     if request.method == "POST":
         json_data = request.get_json()
@@ -460,6 +496,51 @@ def tollyorder():
 
     return json.dumps(jsonreturn)
 
+
+@app.route('/payment',methods=['GET','POST'])
+def payment():
+    cur = mysql.connection.cursor()
+    cur.execute(f'''Select Supplier_ID,Supplier_Name from Suppliers''')
+    rv = cur.fetchall()
+    headers = ['SupplierID','SupplierName']
+    json_data = []
+    for row in rv:
+        json_data.append(dict(zip(headers,row)))
+
+    cur.execute('''select Paymethod_ID, Paymethod_Name from PayMethod''')
+    rv = cur.fetchall()
+    headers = ['PayMethodID','PayMethodName']
+    json_data1 = []
+    for row in rv:
+        json_data1.append(dict(zip(headers,row)))
+
+    jsonreturn = {}
+    jsonreturn['Supplier'] = json_data
+    jsonreturn['Paymethod'] = json_data1
+    return json.dumps(jsonreturn)
+
+
+@app.route('/cashtransfer',methods=['GET','POST'])
+def cashtransfer():
+    cur = mysql.connection.cursor()
+    cur.execute(f'''Select EMPID,EMPName from Employees''')
+    rv = cur.fetchall()    
+    headers = ['EmpID','EmpName']
+    json_data = []
+    for row in rv:
+        json_data.append(dict(zip(headers,row)))
+    return json.dumps(rv)
+
+@app.route('/addmitem',methods=['GET','POST'])
+def addmitem():
+    cur = mysql.connection.cursor()
+    cur.execute(f'''Select MItemCatID,MCatName from MItemCat''')
+    rv = cur.fetchall() 
+    headers = ['MCatID','MCatName']  
+    json_data = []
+    for row in rv:
+        json_data.append(dict(zip(headers,row)))
+    return json.dumps(json_data)
 
 
 
